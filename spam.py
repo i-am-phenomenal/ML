@@ -23,3 +23,25 @@ def readCredentials():
     EMAIL, PASSWORD = utils.decryptMessage(EMAIL, PASSWORD)
 
 readCredentials()
+print(EMAIL, "====>", PASSWORD)
+print(type(EMAIL), "====>", type(PASSWORD))
+
+imapUrl = "imap.gmail.com"
+connection = imaplib.IMAP4_SSL(imapUrl)
+connection.login(EMAIL, PASSWORD)
+connection.select("Inbox")
+type, data = connection.search(None, 'ALL')
+mailIds = data[0]
+idList = mailIds.split()
+firstEmail = int(idList[0])
+lastEmail = int(idList[-1])
+for i in range(latest_email_id,first_email_id, -1):
+        typ, data = mail.fetch(i, '(RFC822)' )
+        for response_part in data:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_string(response_part[1])
+                email_subject = msg['subject']
+                email_from = msg['from']
+                print('From : ' + email_from + '\n')
+                print('Subject : ' + email_subject + '\n')
+# messages = getEmails(search)

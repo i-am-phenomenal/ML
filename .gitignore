@@ -2,3 +2,6 @@ emailCreds.txt
 csv
 secret1.key
 __pycache__/
+token.pickle
+credentials.json 
+S_Email_credentials.json
