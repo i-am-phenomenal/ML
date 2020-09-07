@@ -7,8 +7,17 @@ from google.auth.transport.requests import Request
 import requests
 import base64
 import email
+from bs4 import BeautifulSoup
+import csv 
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+
+def writeToCsv(formatted):
+    with open(os.getcwd() + "/csv/emails.csv", mode="w", encoding="utf-8", newline='') as file:
+        writer  = csv.writer(file, delimiter=',', quotechar = '"', quoting=csv.QUOTE_MINIMAL)
+        row = list(formatted.values())
+        writer.writerow(row)
+        print("Done")
 
 def main():
     creds = None
@@ -30,13 +39,15 @@ def main():
     labels = results.get('labels', [])
     messages = service.users().messages().list(userId='me',labelIds = ['INBOX']).execute()
     messages = messages.get("messages", [])
-    for message in messages:        
+    counter = 0
+    for message in messages:
+        counter += 1
+        print(counter)
         messageId = message["id"]
         msg = service.users().messages().get(userId='me', id=messageId, format="raw").execute()
         messageString= base64.urlsafe_b64decode(msg["raw"].encode("ASCII"))
         mimeMessage = email.message_from_bytes(messageString)
-        # msg = mimeMessa
-        formatted = [{
+        formatted = {
             "deliveredTo": mimeMessage["Delivered-To"],
             "date": mimeMessage["Date"],
             "from": mimeMessage["From"],
@@ -47,14 +58,45 @@ def main():
             "feedbackId": mimeMessage["Feedback-ID"],
             "messageId": mimeMessage["Message-ID"],
             "messageBody": ""
-        }]
+        }
         if mimeMessage.is_multipart(): 
             for payload in mimeMessage.get_payload():
-                print(payload.get_payload(decode=True))
-                print(type(payload.get_payload()))
+                body = payload.get_payload(decode=True)
+                contentType = payload.get_content_type()
+                if contentType == "text/html":
+                    cleaned = BeautifulSoup(body.decode("utf-8"), "html.parser").get_text()
+                    formatted["messageBody"] = cleaned
+                elif contentType == "text/plain":
+                    formatted["messageBody"] = body
         else: 
             body = mimeMessage.get_payload(decode=True)
-            print(body)
-            exit()
+            cleaned = BeautifulSoup(body.decode("utf-8"), "html.parser").get_text()
+            formatted["messageBody"] = cleaned
+        writeToCsv(formatted)
 
+def writeRowsToCSV(): 
+    csvFile = os.getcwd() + "/csv/emails.csv"
+    if os.path.exists(csvFile): 
+       print("File already exists")
+       return
+    else: 
+        try:
+            with open(csvFile, mode="w") as file: 
+                writer  = csv.writer(file, delimiter=',', quotechar = '"', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow([
+                    "Delivered To",
+                    "Date",
+                    "From",
+                    "Reply To",
+                    "To",
+                    "Subject",
+                    "Precedence",
+                    "Feedback Id",
+                    "Message Id",
+                    "Message Body"
+                ])
+        except Exception as e: 
+            print(e)
+
+writeRowsToCSV()
 main()
