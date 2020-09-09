@@ -6,3 +6,7 @@ token.pickle
 credentials.json 
 S_Email_credentials.json
 A_credentials.json
+Object_Detection/models
+Object_Detection/input
+Object_Detection/output
+Object_Detection/venv

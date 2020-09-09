@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 import string
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
+from collections import Counter
 
 def loadSpamRecords():
     allRecords = []
@@ -43,12 +44,22 @@ def getCleanedText(spams):
         cleaned.append(spam)
     return cleaned
 
+def checkMisspelledWords(wordFrequencies): 
+    words = list(wordFrequencies.keys())
+    for word in words: 
+        print(word)
+    exit()
+
 def extractFeatures(spams): 
     for spam in spams:
-        vect = CountVectorizer()
-        X = vect.fit_transform(spam["text"])
-        featureNames = vect.get_feature_names()
-        xTrain, xTest, yTrain, yTest = train_test_split(X, spam["text"], test_size = 0.20, random_state=0)
+        # vect = CountVectorizer()
+        wordFrequencies = dict(Counter(spam["text"]))
+        checkMisspelledWords(wordFrequencies)
+
+        # X = vect.fit_transform(spam["text"])
+        # featureNames = vect.get_feature_names()
+        # xTrain, xTest, yTrain, yTest = train_test_split(X, spam["text"], test_size = 0.20, random_state=0)
+
         # bow = CountVectorizer(analyzer=process_text).fit_transform(spam["text"])
         # print(bow)
 
