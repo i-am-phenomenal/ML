@@ -14,6 +14,7 @@ import torch.utils.data
 from torch.optim import *
 import h5py
 from plot3D import *
+import plot3D
 
 
 class CNNModel(nn.Module):
@@ -66,8 +67,10 @@ def readDataset():
         sampleShape = (16, 16, 16, 3)
         XTrain = rgbDataTransform(XTrain)
         XTest = rgbDataTransform(XTest)
+
     Xtrain = XTrain.reshape(10000, 3, 16,16, 16)
     Xtest = XTest.reshape(2000, 3, 16, 16, 16)
+    # plot3D.plot_voxelgrid(XTest)
     trainX = torch.from_numpy(XTrain).float()
     trainY = torch.from_numpy(targetsTrain).long()
     testx = torch.from_numpy(XTest).float()
@@ -115,16 +118,6 @@ def readDataset():
                 accuracyList.append(accuracy)
             if count % 500 == 0: 
                 print("Iteration: {} Loss: {} Accuracy: {} %".format(count, loss.data, accuracy))
-                    
-
-    
-
-        
-
-
-
-
-        
 
 numClasses = 10
 readDataset()
