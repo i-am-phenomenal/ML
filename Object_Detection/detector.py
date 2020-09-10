@@ -4,7 +4,7 @@ import tensorflow as tf
 
 detector = ObjectDetection()
 modelPath = "./models/yolo-tiny.h5"
-inputPath = "./input/test1.jpg"
+inputPath = "./input/pikachu.jpg"
 outputPath = "./output/newImageForTest1.jpg"
 detector.setModelTypeAsTinyYOLOv3()
 detector.setModelPath(modelPath)
