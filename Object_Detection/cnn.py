@@ -58,6 +58,14 @@ def rgbDataTransform(data):
         dataT.append(arrayToColor(data[i]).reshape(16, 16, 16, 3))
     return np.asarray(dataT, dtype=np.float32)
 
+def readTrained3dDataset(): 
+    with h5py.File("./threeD.h5", "r") as file: 
+        modelWeights = file["model_weights"]
+        print(modelWeights)
+        # print(file.keys())
+        # XTrain = file["X_train"][:]
+        # print(XTrain)
+
 def readDataset(): 
     with h5py.File("./full_dataset_vectors.h5", "r") as file: 
         XTrain = file["X_train"][:]
@@ -70,7 +78,6 @@ def readDataset():
 
     Xtrain = XTrain.reshape(10000, 3, 16,16, 16)
     Xtest = XTest.reshape(2000, 3, 16, 16, 16)
-    # plot3D.plot_voxelgrid(XTest)
     trainX = torch.from_numpy(XTrain).float()
     trainY = torch.from_numpy(targetsTrain).long()
     testx = torch.from_numpy(XTest).float()
@@ -80,6 +87,10 @@ def readDataset():
     test = torch.utils.data.TensorDataset(testx, testy)
     trainLoader = torch.utils.data.DataLoader(train, batch_size=batchSize, shuffle=False)
     testLoader = torch.utils.data.DataLoader(test, batch_size = batchSize, shuffle=False)
+    print(trainLoader)
+    # print(trainLoader.shape)
+    # print(trainY)
+    # exit()
     # Definition of hyperparameters
     nIters = 4500
     numEpochs = nIters / (len(trainX)/ batchSize)
@@ -121,3 +132,4 @@ def readDataset():
 
 numClasses = 10
 readDataset()
+# readTrained3dDataset()
