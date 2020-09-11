@@ -3,6 +3,7 @@ import json
 import urllib.parse
 import ast
 import os 
+import time
 
 clientId = ""
 clientSecret= ""
@@ -24,7 +25,7 @@ def convertBytesToDictionary(content):
     converted = json.loads(records)
     return converted
 
-def generateJwt(): 
+def generateWriteScopeJwt():
     global  AUTHENTICATION_URL
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -45,7 +46,11 @@ def getHeaders(jwt):
 def createPhotoScene(jwt): 
     headers = getHeaders(jwt)
     url = "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene"
-    body = {"scenename": "TestScene"}
+    body = {
+        "scenename": "TestScene",
+        "format": "obj",
+        "scenetype": "object"
+    }
     response = requests.post(url, data=body, headers=headers)
     response = convertBytesToDictionary(response.content)
     photoSceneId = response["Photoscene"]["photosceneid"]
@@ -58,7 +63,8 @@ def uploadImage(jwt, photoSceneId):
     body = { 
         "photosceneid": photoSceneId,
         "type": "image",
-        "file[0]": "https://images-na.ssl-images-amazon.com/images/I/51Cr%2Br8NBDL.jpg"
+        "file[0]": open(filePath, "rb")
+        # "file[0]": "https://images-na.ssl-images-amazon.com/images/I/51Cr%2Br8NBDL.jpg"
         # "file[1]": "https://static.lladro.com/media/catalog/product/cache/9a0e182083c7c5b80c6d12079a53d350/e/a/eadbbfaa23783b6091e30420fdd5348a5db3b4e7a0931e7ca9c6b7c28938296c992c960304d759ad0280f648842307eacd10c569184b66dda2aefcae483bcdbe.jpg",
         # "file[2]": "https://4.imimg.com/data4/KK/DV/MY-20561285/flower-vase-500x500.jpg"
     }
@@ -97,10 +103,10 @@ def checkPhotoSceneProperties( photoSceneId):
     # print(response.content)
 
 
-def trackProgress(jwt, photoSceneId): 
+def trackProgress(photoSceneId): 
     global clientId, clientSecret, AUTHENTICATION_URL
     url = "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/" + photoSceneId + "/progress"
-    urlEncoded = """client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials&scope=bucket:create%20bucket:read%20data:read"""
+    urlEncoded = """client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials&scope=data:read"""
     urlEncoded = urlEncoded.format(
         clientId=clientId,
         clientSecret=clientSecret
@@ -114,8 +120,17 @@ def trackProgress(jwt, photoSceneId):
     actualHeaders = {
         "Authorization": "Bearer %s" %response
     }
-    actualResponse = requests.get(url, headers=actualHeaders)
-    print(actualResponse.content)
+    counter = True
+    while counter:
+        actualResponse = requests.get(url, headers=actualHeaders)
+        actualResponse = convertBytesToDictionary(actualResponse.content)
+        time.sleep(5)
+        if actualResponse["Photoscene"]["progress"] == "100":
+            counter = False
+            print(actualResponse)
+        else: 
+            print(actualResponse)
+            pass
 
 def startPhotoSceneProcessing(jwt, photoSceneId): 
     url = "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/" + photoSceneId
@@ -123,11 +138,26 @@ def startPhotoSceneProcessing(jwt, photoSceneId):
     response = requests.post(url, headers=headers)
     print(response.content)
 
-# jwt = generateJwt()
+def downloadProcessedData(photoSceneId): 
+    global clientId, clientSecret
+    readScopeToken = getAuthenticationTokenForReadScope()
+    print(readScopeToken)
 
-# photoSceneId =  createPhotoScene(jwt)
+def deletePhotoScene(writeScopeJwt, photoSceneId): 
+    url = "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/" + photoSceneId
+    headers = getHeaders(writeScopeJwt)
+    response = requests.delete(url, headers=headers)
+    print(response.content)
+
+writeScopeJwt = generateWriteScopeJwt()
+# print(writeScopeJwt)
+# photoSceneId =  createPhotoScene(writeScopeJwt)
 photoSceneId = ""
-# uploadImage(jwt, photoSceneId)
-checkPhotoSceneProperties(photoSceneId)
-# startPhotoSceneProcessing(jwt, photoSceneId)
-# trackProgress(jwt, photoSceneId)
+# uploadImage(writeScopeJwt, photoSceneId)
+
+# checkPhotoSceneProperties(photoSceneId)
+# startPhotoSceneProcessing(writeScopeJwt, photoSceneId)
+# trackProgress(photoSceneId)
+downloadProcessedData(photoSceneId)
+
+# deletePhotoScene(writeScopeJwt, photoSceneId)
