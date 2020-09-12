@@ -16,3 +16,4 @@ Object_Detection/test_point_clouds.h5
 Object_Detection/train_point_clouds.h5
 Object_Detection/threeD.h5
 Object_Detection/history.pickle
+open3d/venv
