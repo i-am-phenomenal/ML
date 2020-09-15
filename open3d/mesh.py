@@ -19,6 +19,8 @@ def convertPointCloudToMesh():
     dataName = "sample.xyz"
     pointCloud= np.loadtxt(inputPath + dataName, skiprows=1)
     pcd = o3d.geometry.PointCloud()
+    print(type(pointCloud))
+    exit()
     pcd.points = o3d.utility.Vector3dVector(pointCloud[:,:3])
     pcd.colors = o3d.utility.Vector3dVector(pointCloud[:,3:6]/255)
     # pcd.normals = o3d.utility.Vector3dVector(pointCloud[:,6:9])
@@ -104,6 +106,17 @@ def convertImagesToRGB():
             csvOutput.writerow(row)            
             print("Done")
 
+def loadImageAndGetDepth(): 
+    filePath = os.getcwd() + "/doll/IMG_0975.jpg"
+    image = Image.open(filePath)
+    modeToBpp =  {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
+    # print(len(set(image.getdata())))
+    # print(image.mode)
+    bpp = modeToBpp[image.mode]
+    print(bpp)
+
 # convertPointCloudToMesh()
 # convertImageToPointCloud()
-convertImagesToRGB()
+# convertImagesToRGB()
+# convertPointCloudToMesh()
+loadImageAndGetDepth()
