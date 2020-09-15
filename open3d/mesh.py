@@ -11,6 +11,8 @@ from itertools import product
 import glob
 import os
 import csv
+import imutils
+from imutils import paths
 
 
 def convertPointCloudToMesh():
@@ -115,8 +117,23 @@ def loadImageAndGetDepth():
     bpp = modeToBpp[image.mode]
     print(bpp)
 
+def distanceToCamera(): 
+    filePath = os.getcwd() + "/doll/IMG_0975.jpg"
+    image = cv2.imread(filePath)
+    def findMarker(image): 
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (5,5), 0)
+        edged  = cv2.Canny(gray, 35, 125)
+        contours = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contours = imutils.grab_contours(contours)
+        c = max(contours, key=cv2.contourArea)
+        return cv2.minAreaRect(c)
+    x = findMarker(image)
+    print(x)
+
 # convertPointCloudToMesh()
 # convertImageToPointCloud()
 # convertImagesToRGB()
 # convertPointCloudToMesh()
-loadImageAndGetDepth()
+# loadImageAndGetDepth()
+distanceToCamera()
