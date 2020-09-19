@@ -7,6 +7,7 @@ import cv2
 from PIL import Image
 from imageio import imread, imsave
 import skimage.color
+from skimage import io
 from itertools import product
 import glob
 import os
@@ -19,14 +20,14 @@ def convertPointCloudToMesh():
     inputPath = os.getcwd() + "/input/"
     outputPath = os.getcwd() + "/output/"
     dataName = "sample.xyz"
-    pointCloud= np.loadtxt(inputPath + dataName, skiprows=1)
+    dataname = "bundle.out"
+    # pointCloud= np.loadtxt(inputPath + dataName, skiprows=1)
+    pointCloud = np.loadtxt(inputPath + dataname, skiprows = 2)
     pcd = o3d.geometry.PointCloud()
-    print(type(pointCloud))
-    exit()
     pcd.points = o3d.utility.Vector3dVector(pointCloud[:,:3])
-    pcd.colors = o3d.utility.Vector3dVector(pointCloud[:,3:6]/255)
+    # pcd.colors = o3d.utility.Vector3dVector(pointCloud[:,3:6]/255)
     # pcd.normals = o3d.utility.Vector3dVector(pointCloud[:,6:9])
-    # o3d.visualization.draw_geometries([pcd])
+    o3d.visualization.draw_geometries([pcd])
     distances = pcd.compute_nearest_neighbor_distance()
     avgDist = np.mean(distances)
     radius = 3 * avgDist
@@ -117,7 +118,7 @@ def loadImageAndGetDepth():
     bpp = modeToBpp[image.mode]
     print(bpp)
 
-def distanceToCamera(): 
+def distanceFromCamera(): 
     filePath = os.getcwd() + "/doll/IMG_0975.jpg"
     image = cv2.imread(filePath)
     def findMarker(image): 
@@ -128,12 +129,45 @@ def distanceToCamera():
         contours = imutils.grab_contours(contours)
         c = max(contours, key=cv2.contourArea)
         return cv2.minAreaRect(c)
-    x = findMarker(image)
-    print(x)
+    def distanceToCamera(knownWidth, focalLength, perWidth): 
+        return (knownWidth * focalLength) / perWidth
+    marker = findMarker(image)
+    knownDistance = 24.0
+    knownWidth = 11.0
+    focalLength = (marker[0][1] * knownDistance) / knownWidth
+    print(focalLength)
 
-# convertPointCloudToMesh()
+def computeSift(): 
+    filePath1 = os.getcwd() + "/doll/IMG_0975.jpg"
+    filePath2 = os.getcwd() + "/doll/IMG_0979.jpg"
+    image1 = cv2.imread(filePath1)
+    image2 = cv2.imread(filePath2)
+    image1= cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    image2= cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+    sift = cv2.xfeatures2d.SIFT_create()
+    keypoints1, descriptors1 = sift.detectAndCompute(image1, None)
+    
+    keypoints2, descriptors2 = sift.detectAndCompute(image2, None)
+    bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+    matches = bf.match(descriptors1, descriptors2)
+    matches = sorted(matches, key=lambda x: x.distance)
+    img3 = cv2.drawMatches(image1, keypoints1, image2, keypoints2, matches[:50], image2, flags=2)
+    plt.imshow(img3),plt.show()
+
+def plot(): 
+    filePath = os.getcwd() + "/doll/*.jpg"
+    imCollection = io.imread_collection(filePath)
+    im3d = imCollection.concatenate()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(im3d[:,0], im3d[:, 1], im3d[:, 2])
+    plt.show()
+
+convertPointCloudToMesh()
 # convertImageToPointCloud()
 # convertImagesToRGB()
 # convertPointCloudToMesh()
 # loadImageAndGetDepth()
-distanceToCamera()
+# distanceFromCamera()
+# computeSift()
+# plot()
