@@ -8,7 +8,7 @@ def visualize(mesh):
     vis.destroy_window()
 
 def main():
-    mesh = o3d.io.read_triangle_mesh("Chair5.obj")
+    mesh = o3d.io.read_triangle_mesh("Chair4.obj")
     visualize(mesh)
 
 main()
