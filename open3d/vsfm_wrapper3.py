@@ -2,6 +2,7 @@ from multiprocessing import Process
 import os
 import time
 import socket
+import glob 
 import sys
 import _thread
 import subprocess
@@ -9,7 +10,7 @@ import subprocess
 vsfmPath = "C:\Code\VisualSFM_windows_cuda_64bit\VisualSFM.exe"
 inputDir = "C:\Code\osm-bundler-pmvs2-cmvs\osm-bundler\examples\Hello"
 host = 'localhost'
-port = 9999
+port = 2048
 connected = False 
 locked = False
 commandProcessed = False
@@ -78,15 +79,13 @@ def listenToSocketStreamForNView(sock):
         if b'*command processed*' in received:
             commandProcessed = True
             print(received)
-            # connected = False
             print("COMMAND CONFIRMATION RECEIVED")
             return 0
         else:
             pass
 
-def loadNView(): 
+def loadNView(filename): 
     global connected, host, port, process
-    filename = os.getcwd() + "/fileNames.txt"
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
     connected = True
@@ -120,28 +119,47 @@ def reconstructSparse(_socket):
                 break
         return _socket
 
-def reconstructDense(_socket):
-    outputFilePath = "C:/Colmap_workspace/Output Test/test.nvm"
+def reconstructDense(_socket, ouputFilePath):
     if _socket is not None: 
         while True: 
-            command = "33471 C:/Colmap_workspace/Output Test/test.nvm"
+            command = "33471 " + outputFilePath
             sendCommand(_socket, command)
             returnedVal = listenToSocketStreamForDense(_socket)
             if returnedVal == 0: 
                 break
         return _socket
 
-# def saveCurrentModel(_socket):
-#     if _socket is not None: 
-#         while True:
-#             command = 
+def getFileCountInGivenDirectory(path): 
+    count = len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))])
+    return count
 
+def getFileNamesForGivenPath(filePath, extension): 
+    fileOutputPath = os.getcwd() + "/fileWithImagePaths/"
+    fileCount = getFileCountInGivenDirectory(fileOutputPath)
+    txtFileName = fileOutputPath + str(fileCount) + ".txt"
+    with open(txtFileName, "w") as file: 
+        for filename in glob.glob(filePath + "/*." + extension):
+            writableContent = filename + "\n"
+            file.write(writableContent)
+    return txtFileName
+
+def checkIfPortIsInUse(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _socket: 
+        print(_socket.connect_ex(('localhost', port)) == 0)
 
 if __name__ == "__main__": 
+    checkIfPortIsInUse(2048)
     openVSFM()
-    _socket = loadNView()
+    # filename = getFileNamesForGivenPath("C:/Code/Images_DataSet/beethoven_data/images", "ppm")
+    filename = getFileNamesForGivenPath(
+        "C:/Code/Images_DataSet/bird_data/images", 
+        "ppm"
+    )
+    _socket = loadNView(filename)
     _socket = computeMissingMatches(_socket)
     _socket = reconstructSparse(_socket)
-    _socket = reconstructDense(_socket)
-    # _socket = saveCurrentModel(_socket)
+    # outputFilePath = "C:/Colmap_workspace/Output_Test2/test2.nvm"
+    outputFilePath = "C:/Colmap_workspace/Output_Test2/test2.nvm"
+    _socket = reconstructDense(_socket, outputFilePath)
     print(_socket)
+    _socket.close()
