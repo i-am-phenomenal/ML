@@ -22,3 +22,5 @@ open3d/output
 open3d/input
 open3d/Chair5.obj
 open3d/M2.obj
+open3d/vsfm_wrapper2.py
+open3d/vsfm_data.py

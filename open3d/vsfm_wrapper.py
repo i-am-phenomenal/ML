@@ -47,6 +47,7 @@ def startVSFM(port):
     Process(target=startProgram,args=(port,)).start()
     
 def listen2socket(sock,empty):
+    print("0000000000000000000000")
     """
     Prints all data received from the socket in a while loop
     and closes on socket disconnect
@@ -58,8 +59,8 @@ def listen2socket(sock,empty):
 
         #sock.sendall(data + '\n')
         while True:
-            received = sock.recv(2048)
-            print(received, "22222222")
+            received = sock.recv(1048)
+            # print(received, "22222222")
             #print received
             if '*command processed*' in received:
                 cmdProcessed = True
@@ -108,6 +109,21 @@ def setCal(sock):
     print('sent calibration:')
     print(cal)
     sendCommand(sock,cmd)
+
+def reconstructDense(sock): 
+    command = "33471"
+    sendCommand(sock, command)
+    pass
+
+def reconstructSparse(sock): 
+    command = "33041"
+    sendCommand(sock, command)
+    pass
+
+def computeMissingMatch(sock): 
+    command = '33033'
+    sendCommand(sock, command)
+    pass
 
 def matchSequence(sock,spread):
     #spread = matching range of each image in sequence
@@ -175,7 +191,7 @@ def wait4finish(task):
         time.sleep(dt)
     print("Processing Next Command")
 
-def controlVSFM(port):
+def controlVSFM(port, command):
     """
     Start a client to sent commands to VSFM
     """
@@ -192,15 +208,58 @@ def controlVSFM(port):
     #jack =raw_input('press enter when ready')
     #setCal(sock)
     #quit()
+    # print(sock)
+    # exit()
     while connected:
-        filename = os.getcwd() + "/fileNames.txt"
-        loadNViewMatch(sock, filename)
+        if command == "33045":
+            filename = os.getcwd() + "/fileNames.txt"
+            loadNViewMatch(sock, filename)
+            received = sock.recv(2048)
+            received == received.decode("utf-8")
+            print(received)
+            wait4finish('Loading NView Images')
+        elif command == "33033":
+            computeMissingMatch(sock)
+        # if b"----------------------------------------------------------------\r\nLoad existing NView match, finished" in received: 
+        # if b"*command processed*" in received:
+        #     print(received)
+        #     print("111111111111111111111111111")
+        #     sock.close()
+        #     exit()
+        #     # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #     # sock = sock.connect((host,port))
+        #     # exit()
+        #     computeMissingMatch(sock)
+        #     if b"----------------------------------------------------------------\r\nCompute Missing Pairwise Matching, finished\r\n" in received:
+        #         # print(received)
+        #         # sock.close()
+        #         # exit()
+        #         reconstructSparse(sock)
+        #         # if b"----------------------------------------------------------------\r\nRun full 3D reconstruction, finished" in received:
+        #         if b"########-------timing------#########" in received:
+        #             time.sleep(5)
+        #             print(received)
+        #             reconstructDense(sock)
+        #             # exit()
+            
+
+
+
+
+        # print(received)
+        # if received == "Load existing NView match, finished": 
+            # print(received)
         # wait4finish('Loading NView Images')
-        time.sleep(20)
-        matchSequence(sock,4)
-        wait4finish('Matching Sequence')
-        resumeConstruction(sock)
-        wait4finish("CONSTRUCTION")
+        # time.sleep(20)
+        # matchSequence(sock,4)
+        # computeMissingMatch(sock)
+        # wait4finish('COMPUTING MISSING MATCH')
+        # reconstructSparse(sock)
+        # wait4finish("RECONSTRUCTING SPARSE")
+        # reconstructDense(sock)
+        # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        # connected= False
+        # resumeConstruction(sock)
         # newImList = getNewImage(oldImList,inputDir)
         # if newImList:
         #     for path in newImList:
@@ -217,6 +276,8 @@ def controlVSFM(port):
 if __name__ == '__main__':
     
     startVSFM(port)
-    controlVSFM(port)
+    controlVSFM(port, "33045")
+    controlVSFM(port, "33033")
+
 
     print('Main program exiting')
