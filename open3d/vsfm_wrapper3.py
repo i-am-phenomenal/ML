@@ -37,6 +37,17 @@ def loadNViewMatch(sock, filename):
     command = "33045 %s"%filename
     sendCommand(sock, command)
 
+def listenToSocketStreamForDense(_socket):
+    while True:
+        received = _socket.recv(1048)
+        if b"*command processed*" in received: 
+            commandProcessed = True
+            print(received)
+            print("CONFIRMATION RECEIVED FOR DENSE RECONSTRUCTION")
+            return 0
+        else:
+            pass
+
 def listenToSocketStreamForSparse(_socket):
     while True: 
         received = _socket.recv(1048)
@@ -109,9 +120,28 @@ def reconstructSparse(_socket):
                 break
         return _socket
 
+def reconstructDense(_socket):
+    outputFilePath = "C:/Colmap_workspace/Output Test/test.nvm"
+    if _socket is not None: 
+        while True: 
+            command = "33471 C:/Colmap_workspace/Output Test/test.nvm"
+            sendCommand(_socket, command)
+            returnedVal = listenToSocketStreamForDense(_socket)
+            if returnedVal == 0: 
+                break
+        return _socket
+
+# def saveCurrentModel(_socket):
+#     if _socket is not None: 
+#         while True:
+#             command = 
+
+
 if __name__ == "__main__": 
     openVSFM()
     _socket = loadNView()
     _socket = computeMissingMatches(_socket)
     _socket = reconstructSparse(_socket)
+    _socket = reconstructDense(_socket)
+    # _socket = saveCurrentModel(_socket)
     print(_socket)
