@@ -37,6 +37,17 @@ def loadNViewMatch(sock, filename):
     command = "33045 %s"%filename
     sendCommand(sock, command)
 
+def listenToSocketStreamForSparse(_socket):
+    while True: 
+        received = _socket.recv(1048)
+        if b"*command processed*" in received: 
+            commandProcessed = True
+            print(received)
+            print("CONFIRMATION RECEIVED FOR SPARSE RECONSTRUCTION")
+            return 0
+        else:
+            pass
+
 def listenToSocketStreamForMissingMatches(_socket):
     while True: 
         received = _socket.recv(1048)
@@ -44,6 +55,7 @@ def listenToSocketStreamForMissingMatches(_socket):
             commandProcessed = True
             print(received)
             print("CONFIRMATION RECEIVED FOR MISSING MATCHES")
+            return 0
         else:
             pass
     
@@ -85,10 +97,21 @@ def computeMissingMatches(_socket):
             if returnedVal == 0:
                 break
         return _socket
-    # return _socket 
+
+def reconstructSparse(_socket): 
+    if _socket is not None: 
+        connected = True
+        while connected:
+            command = "33041"
+            sendCommand(_socket, command)
+            returnedVal = listenToSocketStreamForSparse(_socket)
+            if returnedVal == 0: 
+                break
+        return _socket
 
 if __name__ == "__main__": 
     openVSFM()
     _socket = loadNView()
     _socket = computeMissingMatches(_socket)
+    _socket = reconstructSparse(_socket)
     print(_socket)
