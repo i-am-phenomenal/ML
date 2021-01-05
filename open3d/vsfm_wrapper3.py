@@ -8,7 +8,7 @@ import _thread
 import subprocess
 
 vsfmPath = "C:\Code\VisualSFM_windows_cuda_64bit\VisualSFM.exe"
-inputDir = "C:\Code\osm-bundler-pmvs2-cmvs\osm-bundler\examples\Hello"
+# inputDir = "C:\Code\osm-bundler-pmvs2-cmvs\osm-bundler\examples\Hello"
 host = 'localhost'
 port = 2048
 connected = False 
@@ -38,9 +38,24 @@ def loadNViewMatch(sock, filename):
     command = "33045 %s"%filename
     sendCommand(sock, command)
 
+def listenToSocketStreamForFindMorePoints(_socket):
+    while True:
+        received = _socket.recv(1048)
+        print(received)
+        if b"*command processed*" in received: 
+            commandProcessed = True
+            print(received)
+            print("CONFIRMATION RECEIVED FOR FIND MORE POINTS")
+            return 0
+        else:
+            pass
+
+
+
 def listenToSocketStreamForDense(_socket):
     while True:
         received = _socket.recv(1048)
+        print(received)
         if b"*command processed*" in received: 
             commandProcessed = True
             print(received)
@@ -52,6 +67,7 @@ def listenToSocketStreamForDense(_socket):
 def listenToSocketStreamForSparse(_socket):
     while True: 
         received = _socket.recv(1048)
+        print(received)
         if b"*command processed*" in received: 
             commandProcessed = True
             print(received)
@@ -63,6 +79,7 @@ def listenToSocketStreamForSparse(_socket):
 def listenToSocketStreamForMissingMatches(_socket):
     while True: 
         received = _socket.recv(1048)
+        print(received)
         if b"*command processed*" in received: 
             commandProcessed = True
             print(received)
@@ -76,6 +93,7 @@ def listenToSocketStreamForNView(sock):
     global connected, commandProcessed
     while True:
         received = sock.recv(1048)
+        print(received)
         if b'*command processed*' in received:
             commandProcessed = True
             print(received)
@@ -133,6 +151,16 @@ def getFileCountInGivenDirectory(path):
     count = len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))])
     return count
 
+def findMorePoints(_socket):
+    if _socket is not None: 
+        while True: 
+            command = "33066"
+            sendCommand(_socket, command)
+            returnedVal = listenToSocketStreamForFindMorePoints(_socket)
+            if returnedVal == 0:
+                break
+        return _socket
+
 def getFileNamesForGivenPath(filePath, extension): 
     fileOutputPath = os.getcwd() + "/fileWithImagePaths/"
     fileCount = getFileCountInGivenDirectory(fileOutputPath)
@@ -143,6 +171,17 @@ def getFileNamesForGivenPath(filePath, extension):
             file.write(writableContent)
     return txtFileName
 
+def directoryExists(outputMainFolder, dirName):
+    path = outputMainFolder + dirName
+    return os.path.isdir(path)
+
+def createDirectoryIfDoesntExists(outputMainFolder, dirName):
+    if directoryExists(outputMainFolder, dirName):
+        return
+    else: 
+        os.mkdir(outputMainFolder + dirName)
+        print("CREATED DIRECTORY")
+
 def checkIfPortIsInUse(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _socket: 
         print(_socket.connect_ex(('localhost', port)) == 0)
@@ -150,16 +189,19 @@ def checkIfPortIsInUse(port):
 if __name__ == "__main__": 
     checkIfPortIsInUse(2048)
     openVSFM()
-    # filename = getFileNamesForGivenPath("C:/Code/Images_DataSet/beethoven_data/images", "ppm")
     filename = getFileNamesForGivenPath(
-        "C:/Code/Images_DataSet/bird_data/images", 
-        "ppm"
+        "C:\Code\Images_DataSet\Buddha", 
+        "jpg"
     )
     _socket = loadNView(filename)
     _socket = computeMissingMatches(_socket)
     _socket = reconstructSparse(_socket)
-    # outputFilePath = "C:/Colmap_workspace/Output_Test2/test2.nvm"
-    outputFilePath = "C:/Colmap_workspace/Output_Test2/test2.nvm"
+    # _socket = findMorePoints(_socket)
+    # _socket = resumeConstruction()
+    outputMainFolder = "C:/Colmap_workspace"
+    outputDirectory = "/Output_Test4/"
+    createDirectoryIfDoesntExists(outputMainFolder, outputDirectory)
+    outputFilePath = outputMainFolder + outputDirectory +  "test4.nvm"
     _socket = reconstructDense(_socket, outputFilePath)
     print(_socket)
     _socket.close()

@@ -8,7 +8,7 @@ def deleteFilesWithGivenExtension(extension):
     # filePath = "C:/Code/Images_DataSet/beethoven_data/images/"
     # filePath = "C:/Code/Images_DataSet/dataset_monstree/full/"
     # filePath = "C:/Code/osm-bundler-pmvs2-cmvs/osm-bundler/examples/Hello/"
-    filePath = "C:/Code/Images_DataSet/bird_data/images/"
+    filePath = "C:\Code\osm-bundler-pmvs2-cmvs\osm-bundler\examples\Hello3/"
     # filePath = "C:/code/Images_DataSet/buddha/"
     matFiles = [file for file in os.listdir(filePath) if file.endswith(extension)]
     if matFiles: 
